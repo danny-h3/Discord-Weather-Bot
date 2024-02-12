@@ -1,0 +1,4 @@
+# Ignore node modules - useless for others when cloning
+/node_modules 
+# .env has sensitive info we dont want to share
+/.env 
