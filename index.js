@@ -1,4 +1,6 @@
-const { token } = require('dotenv').config();
+require('dotenv').config();
+
+const token = process.env['CLIENT_TOKEN'];
 
 const { Client, GatewayIntentBits } = require('discord.js'); 
 
@@ -9,6 +11,7 @@ const client = new Client({
     ] 
 }); 
 
+
 client.on('ready', () => { 
     console.log(`Logged in as ${client.user.tag}!`); 
 })
@@ -16,7 +19,7 @@ client.on('ready', () => {
 client.on('messageCreate', async msg => {
     if (msg.content === 'ping') {
         console.log('Printing');
-        msg.reply('Sup chinky!'); 
+        msg.reply('Hello!'); 
     }
 })
 
