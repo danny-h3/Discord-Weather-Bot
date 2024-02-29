@@ -3,17 +3,18 @@ require('dotenv').config();
 const token = process.env['CLIENT_TOKEN'];
 
 // Grabbing necessary discordjs classes
-const { Client, Collection, Events,  GatewayIntentBits } = require('discord.js'); 
+const { Client, Collection, Events,  GatewayIntentBits, messageLink } = require('discord.js'); 
 
 // Loading command files
 const fs = require('node:fs'); // File system module - for identifying command files
-const path = require('node:path'); // Path module - cosntructs pahts to files and directories
+const path = require('node:path'); // Path module - cosntructs paths to files and directories
 const internal = require('node:stream');
 
 // Creating client instance with necessary intents 
 const client = new Client({  
     intents: [ 
         GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers, 
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
     ] 
@@ -49,24 +50,44 @@ for (const folder of commandFolders) {
     }
 }
 
-// Listen for command
-client.on(Events.InteractionCreate, interaction => {
-    console.log(interaction);
-})
-
 // Print ready when client is ready
 client.on('ready', () => { 
     console.log(`Logged in as ${client.user.tag}!`); 
 })
 
 // Await message 
-client.on('message', async msg => {
-    console.log('I see a message!')
-    if (msg.content === 'ping') {
-        console.log('Printing');
-        msg.reply('Hello!'); 
+client.on(Events.MessageCreate, (message) => {
+    if (message.content === 'ping') {
+        message.reply('Hey!');
     }
 })
+
+// Listen for command - ERROR check if bot was invited with application.commands as scope 
+client.on(Events.InteractionCreate, interaction => {
+    console.log(interaction);
+})
+
+client.on(Events.InteractionCreate, async interaction => {
+	if (!interaction.isChatInputCommand()) return;
+
+	const command = interaction.client.commands.get(interaction.commandName);
+
+	if (!command) {
+		console.error(`No command matching ${interaction.commandName} was found.`);
+		return;
+	}
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		if (interaction.replied || interaction.deferred) {
+			await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+		} else {
+			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
+	}
+});
 
 // Login with token 
 client.login(token); 
